@@ -92,3 +92,39 @@ console.log(names[2].toUpperCase());
 ---
 
 # Item. 2
+
+## 타입스크립트 설정 이해
+
+타입스크립트 옵션 설정은 커맨드 라인을 이용하는 것 보다 `tsconfig.json`을 사용하는 것이 좋다.
+
+```typescript
+function plus(a, b) {
+  return a + b;
+}
+plus(10, null);
+```
+
+위의 코드는 타입스크립트에서 `noImplicitAny: false` 일때는 문제가 발생이 안된다.
+위의 `plus` 함수를 타입스크립트에서 추론한 타입은 다음과 같다
+`function plus(a: any, b: any): any`
+
+any 타입의 매개변수 앞에서는 타입 체커는 무력해진다. any는 유용할 수 있지만 매우 주의해서 사용해야 한다.
+그래서 다시 이어가면 `noImplicitAny` 옵션을 `true`로 사용하면 오류가 발생되며, `any`라고 선언해 주거나 더 분명한 타입을 사용하면 오류를 해결 할 수 있다.
+
+```typescript
+function plus(a: number, b: number) {
+  return a + b;
+}
+```
+
+하지만 `plus(10, null)` 은 `strictNullChecks` 옵션에 의해 `null`은 `number` 타입에 할당 할 수 없다.
+그 외에도 `items2-1.ts` 에 예시 코드작성 확인.
+`strictnullChecks`는 `null`과 `undefined` 관련된 오류를 잡아 내는 데 많은 도움이 되지만, 코드 작성을 어렵게 만든다.
+프로젝트를 새로 시작하면 이 옵션을 설정해서 진행하면 좋지만, 타입스크립트가 처음이고 자바스크립트 코드를 마이그레이션 하는 중이라면 설정하지 않아도 괜찮다고 한다. ~~라고 하지만 해라~~
+
+`strictNullChecks` 옵션은 `noImplicitAny`를 먼저 설정해야 한다. 가능한 한 초반에 설정하는게 좋다. 런타임 오류를 방지하기 위해서...
+`strict` 옵션을 설정하면 대부분의 오류를 잡아낸다.
+
+# Item. 3
+
+##

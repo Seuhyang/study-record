@@ -127,4 +127,123 @@ function plus(a: number, b: number) {
 
 # Item. 3
 
-##
+## 코드 생성과 타입이 관계없는 것
+
+타입스크립트 컴파일러는 두 가지 역할 수행
+
+1. 최신 타입/자바스크립트를 브라우저에서 동작할 수 있도록 구버전의 자바스크립트로 `Transpile(Translate + Compile)`
+2. 코드 타입 오류 체크
+
+이 두 가지는 서로 독립적이다. 즉 컴파일 할때의 코드 내 타입에는 영향을 주지않고 실행 시점에도 타입은 영향을 받지 않는다.<br>
+이를 본다면 타입스크립트가 **할 수 있는 일**과 **할 수 없는 일**을 짐작 할 수 있다.
+
+### 타입 오류가 있는 코드도 컴파일이 가능하다.
+
+컴파일은 타입 체크와 독립적으로 동작하기 때문에 타입 오류가 있는 코드도 컴파일이 가능하다.
+
+```typescript
+// ts file
+let x = "hello";
+x = 10;
+```
+
+```typescript
+// tsc file
+let x = "hello";
+x = 10; // 해당 부분에서 TS2322 ERROR가 발생. 다른 형식이기 때문.
+```
+
+```javascript
+// js file
+let x = "hello";
+x = 1234;
+```
+
+타입스크립트 오류는 경고와 비슷하다. 문제가 될 만한 부분을 알려 주지만 빌드를 멈추지는 않는다.
+
+> 보통 코드 오류에서 컴파일에 문제가 있다고 하는 경우는 타입 체크에 문제가 있다고 하는 것으로 이해하면 된다.
+
+허나 이는 컴파일된 산출물이 나오는 것이 실제로 도움이 되는 경우가 있고, 다른 부분을 테스트 할 수 있다. 오류가 있을 때 컴파일 하지 않으려면 `tsconfig.json`에 `**noEmitOnError**` 옵션을 설정하거나 빌드 도구에 동일하게 적용하면 된다.
+
+### 런타임에는 타입 체그가 불가능하다.
+
+`instanceof` 체크는 런타임에 일어나지만 `type`으로 생성된 내용은 런타임 시점에 아무런 역할을 할 수 없다.
+실제로 Typescript가 Javascript로 컴파일 되는 과정에는 `interface`, `type` 같은 타입 속성은 제거된 상태로 컴파일이 되기 때문에 타입을 명확하게 하는게 중요하다.
+
+```typescript
+interface One {
+  first: number;
+}
+interface Two extends One {
+  second: number;
+}
+type Check = One | Two;
+
+function typeChecker(check: Check) {
+  if ("first" in check) {
+    return check.first * check.second;
+  } else {
+    return check.second;
+  }
+}
+```
+
+아니면 런타임에 접근 가능한 타입 정보를 `명시적으로 저장`하는 `태그` 기법이 있다.
+
+```typescript
+interface One {
+  def: "one";
+  first: number;
+}
+interface Two extends One {
+  def: "two";
+  second: number;
+  first: number;
+}
+
+type Check = One | Two;
+
+function typeChecker(check: Check) {
+  if (check.def === "two") {
+    return check.first * check.second;
+  } else {
+    return check.first;
+  }
+}
+```
+
+`Check`는 `태그된 유니온(tagged union)` 의 예이며, 런타임에 타입 정보를 손쉽게 유지할 수 있기 때문에 타입스크립트에서 흔하게 볼 수 있다.
+타입(런타임 X)과 값(런타임 O)은 둘 다 사용하는 기법도 있는데, 타입을 `클래스`로 만들면 해결이 된다.
+
+```typescript
+class One {
+  constructor(public first: number) {}
+}
+class Two extends One {
+  constructor(public second: number, public first: number) {
+    super(first);
+  }
+}
+type Check = One | Two;
+```
+
+### 타입 연산은 런타임에 영향을 주지 않는다
+
+string 또는 number 타입인 값을 항상 number로 정제하는 경우를 보면
+
+```typescript
+const asNumber1: number = (value: string | number) => {
+  return value as number;
+};
+const asNumber2: number = (value: string | number) => {
+  return typeof val === "string" ? Number(value) : value;
+};
+```
+
+asNumber1의 코드는 타입 체커를 통과하지만 잘못된 방법이고, asNumber2 방식으로 해야 한다.
+
+### 런타임 타입은 선언된 타입과 다를 수 있다
+
+### 타입스크립트 타입으로는 함수를 오버로드할 수 없다
+
+### 타입스크립트 타입은 런타임 성능에 영향을 주지 않는다
